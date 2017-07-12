@@ -1,0 +1,24 @@
+plugins {
+    id 'application'
+    id 'idea'
+}
+
+repositories {
+    mavenCentral()
+    jcenter()
+    maven { url 'https://jitpack.io' }
+}
+
+dependencies {
+    compile 'com.esotericsoftware:kryo:4.0.0'
+    compile 'com.github.d0k1.jsflight:recorder:4.15'
+    compile 'io.reactivex.rxjava2:rxjava:2.1.1'
+    compile 'com.google.code.gson:gson:1.7.2'
+    compile 'com.google.guava:guava:22.0'
+    compile 'org.apache.tika:tika-core:1.15'
+
+    compile 'io.vertx:vertx-core:3.4.2'
+    compile 'io.vertx:vertx-web:3.4.2'
+}
+
+mainClassName="org.eventviewer.Main"

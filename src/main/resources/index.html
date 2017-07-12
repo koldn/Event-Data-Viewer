@@ -1,0 +1,105 @@
+<html>
+<head>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.1.1/basic.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.1.1/dropzone.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.1.1/dropzone.js"></script>
+  <script src="//cdn.jsdelivr.net/sockjs/0.3.4/sockjs.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vertx/3.4.2/vertx-eventbus.js"></script>
+
+  <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+  <link rel="stylesheet" type="text/css"
+        href="https://cdn.datatables.net/v/bs-3.3.7/dt-1.10.15/b-1.3.1/fh-3.1.2/datatables.min.css"/>
+  <script type="text/javascript"
+          src="https://cdn.datatables.net/v/bs-3.3.7/dt-1.10.15/b-1.3.1/fh-3.1.2/datatables.min.js"></script>
+
+
+</head>
+<body>
+<script>
+  $(function(){
+    $("#resultsContent").hide();
+  });
+
+</script>
+<div class="container">
+  <div id="uploading">
+    <div class="page-header" id="uploadHeader">
+      <h1>Upload file created by JSFlight Internal event recorder to view its contents</h1>
+    </div>
+    <div id="fileUpload" class="dropzone"></div>
+  </div>
+  <div id="resultsContent">
+    <div class="page-header" id="resultsHeader">
+    </div>
+    <div>
+      <button class="btn btn-primary" onclick="uploadNewFile()" id="uploadFile">Upload new file</button>
+    </div>
+    <br>
+    <div id="tableHolder">
+
+    </div>
+  </div>
+</div>
+<script>
+    Dropzone.options.fileUpload = {
+      url: "/upload",
+      init: function() {
+          this.on("success", function(file, response) {
+            this.removeFile(file);
+            var eventBus = new EventBus('/results');
+            eventBus.onopen = function () {
+              $("#uploading").hide();
+              $("#resultsContent").show();
+              $("#resultsHeader").append($("<h1> Results for: "+response+"</h1>"));
+              eventBus.registerHandler('fileData.'+response, function (error, message) {
+                if(message.body == 'readingComplete'){
+                  console.log('read complete')
+                  eventBus.close();
+                } else {
+                  toTable(JSON.parse(message.body));
+                }
+              });
+              var xhr = new XMLHttpRequest();
+              xhr.open('GET', '/read/'+response, true);
+              xhr.send();
+            }
+          });
+      }
+    }
+
+</script>
+<script>
+    function toTable(data){
+      if($.trim($("#tableHolder").html())==''){
+        createTableHeader(data['header']);
+      }
+      var dataTable = $('#resultTable').DataTable({
+        fixedHeader: {
+          header:true,
+          footer: false
+        },
+      });
+      dataTable.row.add(data['data']).draw(false);
+    }
+
+    function createTableHeader(rowData){
+        var table =  $('<table id="resultTable" class="table table-striped table-bordered"></table>')
+        var thead = $('<thead/>');
+        var row = $("<tr />");
+        $(rowData).each(function (index, value) {
+          row.append($("<th>" + value + "</th>"));
+        });
+        thead.append(row);
+        $("#tableHolder").append(table);
+        $("#resultTable").append(thead);
+     }
+    function uploadNewFile(){
+      $("#tableHolder").empty();
+      $("#resultsHeader").empty();
+      $("#resultsContent").hide();
+      $("#uploading").show();
+    }
+
+</script>
+</body>
+</html>
